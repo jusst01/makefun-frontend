@@ -37,7 +37,7 @@ export async function renderProfile(container, handle) {
                 <td><a href="#/bounty/${fmt.esc(s.competition.slug)}">${fmt.esc(s.competition.title)}</a></td>
                 <td>${s.placement ? '#' + s.placement : '-'}</td>
                 <td class="tabular-nums">${s.prize_usd > 0 ? fmt.money(s.prize_usd) : '-'}</td>
-                <td>${s.score?.display || '-'}</td>
+                <td>${(s.score?.display && /^\d{5,}$/.test(s.score.display)) ? fmt.rate(Number(s.score.display)) : fmt.esc(s.score?.display || '-')}</td>
               </tr>
             `).join('')}
           </tbody>

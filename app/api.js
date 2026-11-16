@@ -7,7 +7,14 @@ async function getJson(path) {
   if (PENDING.has(url)) return PENDING.get(url);
 
   const promise = (async () => {
-    const cached = CACHE.get(url) || JSON.parse(sessionStorage.getItem(url) || 'null');
+    let cached = CACHE.get(url);
+    if (!cached) {
+      try {
+        cached = JSON.parse(sessionStorage.getItem(url) || 'null');
+      } catch (e) {
+        console.warn('Failed to read sessionStorage', e);
+      }
+    }
 
     const headers = {};
     if (cached && cached.etag) {
@@ -29,7 +36,14 @@ async function getJson(path) {
 
     const entry = { etag, body, at: Date.now() };
     CACHE.set(url, entry);
-    sessionStorage.setItem(url, JSON.stringify(entry));
+    const json = JSON.stringify(entry);
+    if (json.length < 500000) {
+      try {
+        sessionStorage.setItem(url, json);
+      } catch (e) {
+        console.warn('Failed to write sessionStorage', e);
+      }
+    }
 
     return body;
   })();
