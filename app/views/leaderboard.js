@@ -14,7 +14,7 @@ export async function renderLeaderboard(container, slug) {
     const paginated = lb.entries.slice(start, end);
 
     container.innerHTML = `
-      <h1>${fmt.esc(lb.competition)} Leaderboard</h1>
+      <h1>${fmt.esc((lb.competition && lb.competition.title) || slug)} Leaderboard</h1>
       <p>Phase: ${fmt.esc(lb.phase.title)}</p>
       ${lb.metrics_withheld ? '<p>Scores are withheld for this phase.</p>' : ''}
 
@@ -39,7 +39,7 @@ export async function renderLeaderboard(container, slug) {
                 <td>${fmt.esc(e.title)}</td>
                 <td>${!lb.metrics_withheld && e.values?.judge ? fmt.rate(e.values.judge) : '-'}</td>
                 <td>${!lb.metrics_withheld && e.values?.judge_low !== undefined ? fmt.rate(e.values.judge_low) + "-" + fmt.rate(e.values.judge_high) : '-'}</td>
-                <td>${e.valid ? "yes" : "no"}</td>
+                <td>${lb.metrics_withheld ? "-" : (e.valid ? "yes" : "no")}</td>
                 <td>${e.values?.bytes ? (e.values.bytes / 1024).toFixed(1) + " KB" : '-'}</td>
               </tr>
             `).join('')}
