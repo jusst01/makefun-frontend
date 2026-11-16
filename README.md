@@ -1,25 +1,23 @@
-# make.fun frontend — a fast, live-data web client for make.fun
+# makefun-frontend-01
 
-[![make.fun bounty](https://make.fun/badge/makefun-frontend-01.svg)](https://make.fun/bounty/makefun-frontend-01)
-[![rank](https://make.fun/badge/makefun-frontend-01/jusst01/makefun-frontend/rank.svg)](https://make.fun/bounty/makefun-frontend-01)
-[![reward](https://make.fun/badge/makefun-frontend-01/jusst01/makefun-frontend/reward.svg)](https://make.fun/bounty/makefun-frontend-01)
+A static frontend for [make.fun](https://make.fun), built with native ES modules and CSS.
 
-A fully working custom frontend for [make.fun](https://make.fun): the live bounty board, each bounty's page and leaderboard, and public account profiles — plain static files, no build step, reading make.fun's public API.
+[![make.fun](https://make.fun/badge/makefun-frontend-01.svg)](https://make.fun/bounty/makefun-frontend-01)
+![Rank](https://make.fun/badge/makefun-frontend-01/rank)
+![Reward](https://make.fun/badge/makefun-frontend-01/reward)
 
-Entry for the [Build the best make.fun frontend](https://make.fun/bounty/makefun-frontend-01) bounty.
+## Surfaces
+- **Bounty Board (`#/`)**: Browse open competitions, search, and sort by various metrics.
+- **Bounty Page (`#/bounty/<slug>`)**: Details of a specific competition.
+- **Leaderboard (`#/bounty/<slug>/leaderboard`)**: Rankings for a competition.
+- **Profile (`#/u/<handle>`)**: Public profile of an account.
 
-## Run it
+## Development
+To run locally:
+1. `node serve.ts`
+2. Open `http://localhost:8080` in your browser.
 
-```
-node serve.ts
-```
-
-then open http://localhost:8080.
-
-## Hand it in
-
-```
-mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-```
-
-copies `app/` and `screenshots/` to `out/` and writes `out/dossier.json`.
+## Handover
+To generate the submission:
+`MAKEFUN_OUTPUT_DIR=out node main.ts`
+This will generate `out/dossier.json`.

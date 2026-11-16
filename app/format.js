@@ -1,29 +1,37 @@
-// Small helpers for showing API values.
+// Utilities for formatting data
+export const esc = (text) => {
+  if (text === null || text === undefined) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
 
-/** Text made safe to put inside HTML. */
-export function esc(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-}
+export const money = (amount) => `$${(amount || 0).toLocaleString()}`;
 
-/** A dollar amount ('1000.00' or 0.5) as '$1,000' or '$0.50'. */
-export function money(value) {
-  const n = Number(value);
-  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 });
-}
+export const dateUtc = (dateStr) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
 
-/** A deadline as a date in UTC. */
-export function date(iso) {
-  return `${new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' })} UTC`;
-}
+export const timeLeft = (deadline) => {
+  const diff = new Date(deadline) - Date.now();
+  if (diff <= 0) return 'ended';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  return `${days}d ${hours}h left`;
+};
 
-/** The time until a deadline: '2d 4h left', '35m left', or 'ended'. */
-export function timeLeft(iso) {
-  const ms = new Date(iso).getTime() - Date.now();
-  if (ms <= 0) return 'ended';
-  const days = Math.floor(ms / 86400000);
-  const hours = Math.floor((ms % 86400000) / 3600000);
-  const minutes = Math.floor((ms % 3600000) / 60000);
-  if (days > 0) return `${days}d ${hours}h left`;
-  if (hours > 0) return `${hours}h ${minutes}m left`;
-  return `${minutes}m left`;
-}
+export const rate = (microRate) => (microRate / 1000000).toFixed(4);
+
+export const pct = (val) => `${(val * 100).toFixed(1)}%`;
+
+export const plural = (count, singular, plural) => count === 1 ? singular : plural;
+
+export const shortWallet = (address) => address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
