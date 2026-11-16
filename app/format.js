@@ -20,12 +20,48 @@ export const dateUtc = (dateStr) => {
   });
 };
 
+// The fuller form of dateUtc: always carries the year, plus weekday short
+// so a deadline reads as a real calendar date ("Mon, Nov 16, 2026").
+export const dateFull = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
+
+const HOUR = 1000 * 60 * 60;
+const DAY = HOUR * 24;
+
 export const timeLeft = (deadline) => {
   const diff = new Date(deadline) - Date.now();
   if (diff <= 0) return 'ended';
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const days = Math.floor(diff / DAY);
+  const hours = Math.floor((diff % DAY) / HOUR);
   return `${days}d ${hours}h left`;
+};
+
+// timeLeft plus the urgency level a view needs for its badge colour.
+// level: "ended" | "urgent" (under 48h) | "soon" (under 7 days) | "ok"
+export const countdown = (deadline) => {
+  if (!deadline) return { label: 'ended', level: 'ended' };
+
+  const diff = new Date(deadline) - Date.now();
+  if (Number.isNaN(diff) || diff <= 0) return { label: 'ended', level: 'ended' };
+
+  const level = diff < 48 * HOUR ? 'urgent' : diff < 7 * DAY ? 'soon' : 'ok';
+
+  if (diff < DAY) {
+    const hours = Math.floor(diff / HOUR);
+    const minutes = Math.floor((diff % HOUR) / (1000 * 60));
+    return { label: `${hours}h ${minutes}m left`, level };
+  }
+
+  return { label: timeLeft(deadline), level };
 };
 
 export const rate = (microRate) => (microRate / 1000000).toFixed(4);

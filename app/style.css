@@ -1,62 +1,972 @@
+/* make.fun bounties - design foundation
+   Dark "ledger" theme for a bounty board: the money is the hero.
+
+   Rules this file holds:
+   - One accent, amber, and only for money figures, the active state,
+     and ranks 1 to 3. Everything else is greyscale.
+   - Flat surfaces, hairline borders. No soft shadows, no gradients,
+     no glass, no glow. The only ring is the focus ring.
+   - Spacing is a 4px scale: 4 / 8 / 12 / 16 / 24 / 32 / 48.
+   - Type scale: 12 / 13 / 14 / 16 / 20 / 26 / 34. Body is 14px / 1.45.
+     Headings are weight 650 at line-height 1.15.
+     Money and scores use tabular figures.
+   - Motion is 140ms ease on color, border-color and background only,
+     and is switched off under prefers-reduced-motion.
+   */
+
 :root {
-  --ink: #101418;
-  --paper: #f7f5f0;
-  --card: #ffffff;
-  --line: #e3e0d8;
-  --accent: #0b6e4f;
-  --muted: #6b7280;
+  /* surfaces */
+  --bg: #0e1013;
+  --panel: #16181d;
+  --panel2: #1d2027;
+  --line: #262a33;
+  --line-strong: #333a47; /* hover borders only */
+
+  /* text */
+  --ink: #eceef2;
+  --muted: #a7aeba; /* AA on --panel and --panel2 */
+
+  /* accent: money, active state, ranks 1 to 3 */
+  --accent: #f0b429;
+  --accent-strong: #d9a021; /* hover/pressed shade of the accent */
+  --accent-ink: #1a1405; /* text on amber */
+
+  /* status */
+  --good: #4cc38a;
+  --bad: #f26d6d;
+
+  --radius-card: 10px;
+  --radius-control: 8px;
+
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------- base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  line-height: 1.5;
-}
-
-header {
-  background: var(--ink);
-  color: #fff;
-  padding: 1rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
 }
 
-header a { color: #fff; text-decoration: none; font-weight: bold; }
-header nav { display: flex; gap: 1rem; align-items: center; }
-header .muted { color: var(--muted); font-size: 0.8rem; }
+.container {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  flex: 1 0 auto;
+  overflow-wrap: break-word;
+}
 
-main { padding: 1rem; max-width: 1000px; margin: 0 auto; }
+a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong);
+  cursor: pointer;
+  transition: color 140ms ease;
+}
+
+a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 12px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: 26px;
+}
+
+h2 {
+  font-size: 20px;
+  margin-top: 24px;
+}
+
+h3 {
+  font-size: 16px;
+  margin-top: 24px;
+}
+
+h2:first-child,
+h3:first-child,
+.bounty-card h3,
+.card h3,
+.profile-head h1 {
+  margin-top: 0;
+}
+
+p {
+  margin: 0 0 12px;
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+ul,
+ol {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+
+li {
+  margin: 0 0 4px;
+}
+
+img,
+svg,
+table {
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------- shell */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  /* aligns the header's content edge with .container's content edge */
+  padding: 12px max(20px, calc((100% - 1120px) / 2 + 20px));
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.wordmark {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.wordmark:hover {
+  color: var(--accent);
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current="page"] {
+  color: var(--ink);
+}
+
+.site-nav .muted {
+  font-size: 12px;
+}
+
+.site-footer {
+  flex: 0 0 auto;
+  padding: 20px max(20px, calc((100% - 1120px) / 2 + 20px));
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ------------------------------------------------- controls / toolbar */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.search-input,
+.select {
+  min-width: 0;
+  max-width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  transition: color 140ms ease, border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.search-input {
+  flex: 1 1 240px;
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.search-input:hover,
+.select:hover {
+  border-color: var(--line-strong);
+}
+
+.select {
+  flex: 0 1 auto;
+  min-width: 160px;
+}
+
+.btn,
+.pager button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--panel2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.btn:hover,
+.pager button:hover:not(:disabled) {
+  border-color: var(--line-strong);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: var(--accent-ink);
+}
+
+.btn-ghost {
+  background: var(--panel2);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.btn:disabled,
+.pager button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--panel2);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 550;
+  white-space: nowrap;
+  transition: color 140ms ease, border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+/* a chip in a toolbar is a toggle, so it carries a full tap target */
+.chip-row .chip,
+button.chip {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--panel2);
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- stats */
+
+.stats-strip,
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.stat {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+.stat b {
+  display: block;
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* --------------------------------------------------------------- cards */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin: 0 0 24px;
+}
+
+.bounty-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+  color: inherit;
+  text-decoration: none;
+  transition: color 140ms ease, border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.bounty-card:hover {
+  border-color: var(--line-strong);
+  background: var(--panel2);
+}
+
+.bounty-card h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.bounty-card a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pot {
+  color: var(--accent);
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.time-left {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.time-left.urgent {
+  color: var(--bad);
+}
+
+.time-left.soon {
+  color: var(--ink);
+}
+
+.time-left.ended {
+  color: var(--muted);
+}
+
+/* -------------------------------------------------------------- tables */
+
+.tablewrap {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 0 0 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+caption {
+  padding: 12px 16px 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: left;
+}
+
+th {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr {
+  transition: background-color 140ms ease;
+}
+
+tbody tr:hover {
+  background: var(--panel2);
+}
+
+.num,
+.tabular-nums {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel2);
+  font-size: 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-medal.gold {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rank-medal.silver {
+  border-color: #cfd4dd;
+  color: #cfd4dd;
+}
+
+.rank-medal.bronze {
+  border-color: #d99a5b;
+  color: #d99a5b;
+}
+
+/* --------------------------------------------------------- bounty page */
+
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.fact {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+.fact span,
+.fact small,
+.fact-label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.fact b,
+.fact strong,
+.fact-value {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rewards-note {
+  display: block;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--panel2);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.rules-list {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.rules-list li {
+  position: relative;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.rules-list li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.top-entries {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 0 0 24px;
+}
+
+/* -------------------------------------------------------------- profile */
+
+.profile-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 24px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+.profile-head h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.avatar {
+  display: block;
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel2);
+  object-fit: cover;
+}
+
+.stats-grid {
+  margin-bottom: 24px;
+}
+
+/* --------------------------------------------------------------- states */
+
+.skeleton {
+  border-radius: var(--radius-control);
+  background: var(--panel2);
+  animation: skel-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.skel-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+}
+
+.skel-line {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--panel2);
+  animation: skel-pulse 1.4s ease-in-out infinite;
+}
+
+.skel-card .skel-line:first-child {
+  width: 70%;
+  height: 20px;
+}
+
+.empty {
+  padding: 32px 20px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+  color: var(--muted);
+  text-align: center;
+}
+
+.error-box {
+  padding: 16px;
+  border: 1px solid var(--bad);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.error-box h1,
+.error-box h2,
+.error-box h3 {
+  margin-top: 0;
+}
+
+.loading {
+  padding: 24px 0;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- pager */
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.pager span {
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------------
+   Legacy view hooks.
+   The view files still emit these class names; they are folded onto the
+   system above so nothing renders unstyled. A later session that rewrites
+   a view against .bounty-card / .facts-grid / .stats-strip can drop them.
+   ------------------------------------------------------------------------ */
 
 .card {
-  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
   border: 1px solid var(--line);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+  transition: color 140ms ease, border-color 140ms ease,
+    background-color 140ms ease;
 }
 
-.card:hover { border-color: var(--muted); }
+.card:hover {
+  border-color: var(--line-strong);
+  background: var(--panel2);
+}
 
-.tablewrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
-table { width: 100%; border-collapse: collapse; }
-th { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--line); }
-td { padding: 0.75rem; border-bottom: 1px solid var(--line); }
-.tabular-nums { font-variant-numeric: tabular-nums; text-align: right; }
+.card h3 {
+  margin: 0;
+  font-size: 16px;
+}
 
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-top: 1rem; }
-.stat-item { background: var(--card); border: 1px solid var(--line); padding: 1rem; border-radius: 8px; }
+.card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
 
-.chip { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; background: var(--line); font-size: 0.8rem; }
+.card a {
+  color: inherit;
+  text-decoration: none;
+}
 
-button { background: var(--accent); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
-button:disabled { background: var(--muted); }
-button:hover { opacity: 0.9; }
+.card a:hover h3 {
+  text-decoration: underline;
+}
 
-@media (max-width: 720px) {
-  header { flex-direction: column; gap: 0.5rem; }
-  header nav { width: 100%; justify-content: space-between; }
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.facts p {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.description {
+  margin: 0 0 24px;
+  max-width: 68ch;
+}
+
+.description p {
+  margin: 0 0 12px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.stat-item {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--panel);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-item strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stat-item br {
+  display: none;
+}
+
+.avatar-container {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel2);
+}
+
+/* profile.js still sets a light #ccc background and a 2rem size inline on
+   this element, and inline styles outrank a plain rule. !important is the
+   only way to hold the dark theme here; drop both when profile.js is
+   rewritten to emit .avatar / .profile-head instead. */
+.avatar-initial {
+  background: var(--panel2) !important;
+  color: var(--ink) !important;
+  font-size: 20px !important;
+  font-weight: 650;
+}
+
+/* ------------------------------------------------------------ responsive */
+
+@media (max-width: 860px) {
+  .stats-strip,
+  .stats-grid,
+  .facts-grid,
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .container {
+    padding: 20px 16px 32px;
+  }
+
+  .site-header,
+  .site-footer {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .site-header {
+    gap: 8px;
+  }
+
+  .site-nav {
+    gap: 12px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar .search-input,
+  .toolbar .select,
+  .toolbar .btn {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  .card-grid,
+  .facts-grid,
+  .facts {
+    grid-template-columns: 1fr;
+  }
+
+  /* one column on a small phone; the 860px rule's 2 columns hold above that */
+  .stats-strip,
+  .stats-grid,
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 560px) {
+  h1 {
+    font-size: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
