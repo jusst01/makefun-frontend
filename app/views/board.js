@@ -5,8 +5,10 @@ export async function renderBoard(container) {
   const data = await getBounties();
   const bounties = data.items;
 
+  const openCount = bounties.filter(b => new Date(b.deadline) > new Date()).length;
+
   container.innerHTML = `
-    <h1>Bounties</h1>
+    <h1>${openCount} open bounties</h1>
     <input type="text" id="search" placeholder="Search bounties...">
     <select id="sort">
       <option value="deadline">Ending soon</option>
@@ -23,22 +25,26 @@ export async function renderBoard(container) {
   const renderList = () => {
     let filtered = bounties.filter(b =>
       b.title.toLowerCase().includes(search.value.toLowerCase()) ||
-      b.category.toLowerCase().includes(search.value.toLowerCase())
+      (b.category || "").toLowerCase().includes(search.value.toLowerCase())
     );
 
     if (sort.value === 'deadline') filtered.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     else if (sort.value === 'pot') filtered.sort((a, b) => b.potUsd - a.potUsd);
     else if (sort.value === 'entries') filtered.sort((a, b) => b.submissionCount - a.submissionCount);
 
-    list.innerHTML = filtered.map(b => `
-      <div class="card">
-        <a href="#/bounty/${fmt.esc(b.slug)}"><h3>${fmt.esc(b.title)}</h3></a>
-        <p>Live pot: ${fmt.money(b.potUsd)}</p>
-        <p>${fmt.timeLeft(b.deadline)}</p>
-        <p>${b.submissionCount} ${fmt.plural(b.submissionCount, 'entry', 'entries')}</p>
-        <p>Category: ${fmt.esc(b.category)}</p>
-      </div>
-    `).join('');
+    list.innerHTML = filtered.map(b => {
+      const isClosed = new Date(b.deadline) <= new Date();
+      return `
+        <div class="card">
+          <a href="#/bounty/${fmt.esc(b.slug)}"><h3>${fmt.esc(b.title)}</h3></a>
+          ${b.entryFeeUsd ? `<p>Entry fee: ${fmt.money(b.entryFeeUsd)}</p>` : ''}
+          <p>Live pot: ${fmt.money(b.potUsd)}</p>
+          ${isClosed ? `<span class="chip">Closed</span>` : `<p>${fmt.timeLeft(b.deadline)}</p>`}
+          <p>${b.submissionCount} ${fmt.plural(b.submissionCount, 'entry', 'entries')}</p>
+          <p>Category: ${fmt.esc(b.category || "General")}</p>
+        </div>
+      `;
+    }).join('');
   };
 
   search.addEventListener('input', renderList);

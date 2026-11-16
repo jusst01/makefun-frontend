@@ -8,36 +8,49 @@ export async function renderLeaderboard(container, slug) {
   const pageSize = 50;
 
   const render = () => {
+    const totalPages = Math.ceil(lb.entries.length / pageSize);
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
     const paginated = lb.entries.slice(start, end);
 
     container.innerHTML = `
       <h1>${fmt.esc(lb.competition)} Leaderboard</h1>
-      <p>Phase: ${fmt.esc(lb.phase)}</p>
+      <p>Phase: ${fmt.esc(lb.phase.title)}</p>
+      ${lb.metrics_withheld ? '<p>Scores are withheld for this phase.</p>' : ''}
 
-      <table>
-        <thead>
-          <tr>
-            ${lb.columns.map(c => `<th>${fmt.esc(c.title)}</th>`).join('')}
-          </tr>
-        </thead>
-        <tbody>
-          ${paginated.map(e => `
+      <div class="tablewrap">
+        <table>
+          <thead>
             <tr>
-              <td>${e.rank}</td>
-              <td><a href="#/u/${fmt.esc(e.handle)}">${fmt.esc(e.handle)}</a></td>
-              <td>${fmt.esc(e.title)}</td>
-              <td>${e.values?.judge ? fmt.rate(e.values.judge) : '-'}</td>
+              <th>Rank</th>
+              <th>Entrant</th>
+              <th>Entry</th>
+              <th>Judge</th>
+              <th>Interval</th>
+              <th>Valid</th>
+              <th>Size</th>
             </tr>
-          `).join('')}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            ${paginated.map(e => `
+              <tr>
+                <td>${e.rank || '-'}</td>
+                <td><a href="#/u/${fmt.esc(e.handle)}">${fmt.esc(e.handle)}</a></td>
+                <td>${fmt.esc(e.title)}</td>
+                <td>${!lb.metrics_withheld && e.values?.judge ? fmt.rate(e.values.judge) : '-'}</td>
+                <td>${!lb.metrics_withheld && e.values?.judge_low !== undefined ? fmt.rate(e.values.judge_low) + "-" + fmt.rate(e.values.judge_high) : '-'}</td>
+                <td>${e.valid ? "yes" : "no"}</td>
+                <td>${e.values?.bytes ? (e.values.bytes / 1024).toFixed(1) + " KB" : '-'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
 
-      <div>
+      <div style="margin-top: 1rem;">
         <button id="prev" ${page === 1 ? 'disabled' : ''}>Prev</button>
-        <span>Page ${page}</span>
-        <button id="next" ${end >= lb.entries.length ? 'disabled' : ''}>Next</button>
+        <span>Page ${page} of ${totalPages}</span>
+        <button id="next" ${page >= totalPages ? 'disabled' : ''}>Next</button>
       </div>
     `;
 
