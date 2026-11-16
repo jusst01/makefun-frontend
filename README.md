@@ -3,8 +3,8 @@
 A static frontend for [make.fun](https://make.fun), built with native ES modules and CSS.
 
 [![make.fun](https://make.fun/badge/makefun-frontend-01.svg)](https://make.fun/bounty/makefun-frontend-01)
-![Rank](https://make.fun/badge/makefun-frontend-01/rank)
-![Reward](https://make.fun/badge/makefun-frontend-01/reward)
+[![rank](https://make.fun/badge/makefun-frontend-01/jusst01/makefun-frontend/rank.svg)](https://make.fun/bounty/makefun-frontend-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=makefun-frontend-01)
+[![reward](https://make.fun/badge/makefun-frontend-01/jusst01/makefun-frontend/reward.svg)](https://make.fun/bounty/makefun-frontend-01?utm_source=github&utm_medium=readme&utm_campaign=makefun-frontend-01)
 
 ## Surfaces
 - **Bounty Board (`#/`)**: Browse open competitions, search, and sort by various metrics.
