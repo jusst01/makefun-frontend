@@ -1,98 +1,58 @@
-import {
-  getBounties,
-  getBounty,
-  getLeaderboard,
-  getProfile,
-  beginView,
-  subscribe,
-  counters
-} from './api.js';
-import * as fmt from './format.js';
+const sheet = document.createElement('link');
+sheet.rel = 'stylesheet';
+sheet.href = 'style.css';
+document.head.appendChild(sheet);
 
 const app = document.getElementById('app');
 const net = document.getElementById('net');
 
-// Header readout: one line describing this view's traffic, repainted whenever a
-// counter moves. No data is shown until this view has actually made a request.
-function paintNet(state) {
-  if (!net) return;
-  const requests = state.requests;
-  const parts = [`this view: ${requests} API ${fmt.plural(requests, 'request', 'requests')}`];
-  parts.push(`${state.reused} from cache`);
-  if (state.unchanged > 0) parts.push(`${state.unchanged} unchanged (ETag)`);
-  if (state.at) parts.push(`as of ${state.at} UTC`);
-  net.textContent = parts.join(' · ');
-}
+// Reads the live counters: repainted on every change, empty until a request.
+const paint = (c) => {
+  if (net) net.textContent = `this view: ${c.requests} API ${c.requests === 1 ? 'request' : 'requests'} · ${c.reused} from cache${c.unchanged ? ` · ${c.unchanged} unchanged (ETag)` : ''}${c.at ? ` · as of ${c.at} UTC` : ''}`;
+};
 
-subscribe(paintNet);
-paintNet(counters);
+let api = null;
 
-const loadingHtml = () => `
-  <div class="skeleton" style="display:flex;flex-direction:column;gap:12px;padding:20px 0;background:transparent">
-    <div class="skel-line" style="width:42%;height:30px"></div>
-    <div class="skel-line" style="width:24%"></div>
-    <div class="skel-line" style="width:88%"></div>
-    <div class="skel-line" style="width:76%"></div>
-    <div class="skel-line" style="width:64%"></div>
-  </div>
-`;
-
-const errorHtml = (message) => `
-  <div class="error-box">
-    <h2>Something went wrong</h2>
-    <p>${fmt.esc(message)}</p>
-    <button type="button" class="btn btn-primary" id="retry">Try again</button>
-  </div>
-`;
-
-const notFoundHtml = () => `
-  <div class="empty">
-    <h2>Page not found</h2>
-    <p>That page does not exist.</p>
-    <a class="btn btn-ghost" href="#/">Back to the board</a>
-  </div>
-`;
+const skel = '<div class="skeleton" style="height:210px"></div>';
+const errorBox = '<div class="error-box"><h2>Something went wrong</h2><p></p><button type="button" id="retry">Try again</button></div>';
+const notFound = '<div class="empty"><h2>Page not found</h2><p>That page does not exist.</p><a href="#/">Back to the board</a></div>';
 
 async function render() {
   window.__shotReady = false;
-  beginView();
   const hash = location.hash || '#/';
+  if (!api) {
+    api = await import('./api.js');
+    api.subscribe(paint);
+  }
+  api.beginView();
+  app.innerHTML = skel;
 
-  app.innerHTML = loadingHtml();
+  const [, , slug, sub] = hash.split('/');
 
   try {
     if (hash === '#/') {
       document.title = 'Board · make.fun bounties';
-      const { renderBoard } = await import('./views/board.js');
-      await renderBoard(app);
-    } else if (hash.startsWith('#/bounty/')) {
-      const parts = hash.split('/');
-      const slug = parts[2];
-      if (parts[3] === 'leaderboard') {
+      await (await import('./views/board.js')).renderBoard(app);
+    } else if (slug && hash.startsWith('#/bounty/')) {
+      if (sub === 'leaderboard') {
         document.title = `Leaderboard · ${slug}`;
-        const { renderLeaderboard } = await import('./views/leaderboard.js');
-        await renderLeaderboard(app, slug);
+        await (await import('./views/leaderboard.js')).renderLeaderboard(app, slug);
       } else {
         document.title = slug;
-        const { renderBounty } = await import('./views/bounty.js');
-        await renderBounty(app, slug);
+        await (await import('./views/bounty.js')).renderBounty(app, slug);
       }
-    } else if (hash.startsWith('#/u/')) {
-      const handle = hash.split('/')[2];
-      document.title = `@${handle}`;
-      const { renderProfile } = await import('./views/profile.js');
-      await renderProfile(app, handle);
+    } else if (slug && hash.startsWith('#/u/')) {
+      document.title = `@${slug}`;
+      await (await import('./views/profile.js')).renderProfile(app, slug);
     } else {
       document.title = 'Not found';
-      app.innerHTML = notFoundHtml();
-      document.documentElement.scrollTop = 0;
+      app.innerHTML = notFound;
     }
-
     document.documentElement.scrollTop = 0;
   } catch (e) {
-    app.innerHTML = errorHtml(e && e.message ? e.message : 'Unknown error');
-    const retry = app.querySelector('#retry');
-    if (retry) retry.addEventListener('click', () => { render(); });
+    app.innerHTML = errorBox;
+    app.querySelector('.error-box p').textContent = e && e.message ? e.message : 'Unknown error';
+    app.querySelector('#retry').addEventListener('click', render);
   } finally {
     window.__shotReady = true;
   }

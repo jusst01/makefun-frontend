@@ -4,7 +4,36 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>make.fun bounties</title>
-<link rel="stylesheet" href="style.css">
+<style>
+:root{--bg:#0e1013;--panel:#16181d;--panel2:#1d2027;--line:#262a33;--ink:#eceef2;--muted:#a7aeba;--accent:#f0b429;--radius:10px;--maxw:1120px}
+*,*::before,*::after{box-sizing:border-box}
+html{color-scheme:dark}
+body{display:flex;flex-direction:column;min-height:100vh;margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+h1{margin:0 0 12px;font-weight:650;line-height:1.15;letter-spacing:-.02em;font-size:34px}
+.muted{color:var(--muted)}
+.container{flex:1 0 auto;width:100%;max-width:var(--maxw);margin:0 auto;padding:24px 20px 40px}
+.site-header{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding:10px max(20px,calc((100% - var(--maxw))/2 + 20px));background:var(--panel);border-bottom:1px solid var(--line)}
+.wordmark{font-size:16px;font-weight:650;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+.site-nav{display:flex;flex-wrap:wrap;align-items:center;gap:16px;font-size:13px}
+.site-nav a,.site-nav .muted{color:var(--muted);text-decoration:none;padding:8px 0;font-size:13px}
+.net-readout{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.skeleton,.skel-line{position:relative;overflow:hidden;background-color:var(--panel2)}
+.skeleton::after,.skel-line::after{content:"";position:absolute;inset:0;background-color:color-mix(in srgb,var(--ink) 7%,transparent);animation:shimmer 1.4s ease-in-out infinite}
+@keyframes shimmer{50%{opacity:1}}
+.skel-card{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--line);border-radius:var(--radius);background-color:var(--panel)}
+.skel-line{height:12px;border-radius:4px}
+.stats-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 24px}
+.stat{display:flex;flex-direction:column;gap:4px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius);background-color:var(--panel)}
+.stat b{font-size:20px;font-weight:650;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin:0 0 24px}
+.bounty-card{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--line);border-radius:var(--radius);background-color:var(--panel);color:var(--ink);text-decoration:none}
+.pot{font-size:26px;font-weight:650;line-height:1.15;color:var(--accent);font-variant-numeric:tabular-nums}
+.meta-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;color:var(--muted);font-size:13px}
+.split{display:block}
+@media (min-width:1100px){.split{display:grid;grid-template-columns:minmax(340px,430px) 1fr;gap:16px;align-items:start}.pane-detail{position:sticky;top:76px}}
+@media (max-width:560px){.site-nav{width:100%}.net-readout{flex:1 0 100%;margin-left:0;white-space:normal;overflow-wrap:anywhere}}
+</style>
 <script type="module" src="main.js"></script>
 </head>
 <body>
