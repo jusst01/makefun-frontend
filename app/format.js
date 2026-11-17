@@ -20,13 +20,44 @@ export const dateUtc = (dateStr) => {
   });
 };
 
-export const timeLeft = (deadline) => {
-  const diff = new Date(deadline) - Date.now();
-  if (diff <= 0) return 'ended';
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  return `${days}d ${hours}h left`;
+// Full date for detail views: month, day and year, no weekday.
+export const dateFull = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 };
+
+const HOUR = 1000 * 60 * 60;
+const DAY = HOUR * 24;
+
+// Remaining time plus a severity level for styling:
+// "ended", "urgent" (under 48h), "soon" (under 7 days) or "ok".
+export const countdown = (deadline) => {
+  const target = new Date(deadline).getTime();
+  if (Number.isNaN(target)) return { label: 'ended', level: 'ended' };
+
+  const diff = target - Date.now();
+  if (diff <= 0) return { label: 'ended', level: 'ended' };
+
+  const days = Math.floor(diff / DAY);
+  const hours = Math.floor((diff % DAY) / HOUR);
+  const minutes = Math.floor((diff % HOUR) / (1000 * 60));
+
+  const label = days >= 1 ? `${days}d ${hours}h left` : `${hours}h ${minutes}m left`;
+
+  let level = 'ok';
+  if (diff < 48 * HOUR) level = 'urgent';
+  else if (diff < 7 * DAY) level = 'soon';
+
+  return { label, level };
+};
+
+export const timeLeft = (deadline) => countdown(deadline).label;
 
 export const rate = (microRate) => (microRate / 1000000).toFixed(4);
 
