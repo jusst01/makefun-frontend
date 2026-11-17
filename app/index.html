@@ -4,8 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>make.fun bounties</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1013'/%3E%3Crect x='7' y='14' width='18' height='4' rx='2' fill='%23f0b429'/%3E%3Crect x='14' y='7' width='4' height='18' rx='2' fill='%23f0b429'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 1v8M1 5h8' stroke='%23f0b429'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#0e1013;--panel:#16181d;--panel2:#1d2027;--line:#262a33;--line-strong:#333a47;--ink:#eceef2;--muted:#a7aeba;--accent:#f0b429;--radius-card:10px;--radius-control:8px;color-scheme:dark}
+*,:before,:after{box-sizing:border-box}
+body{display:flex;flex-direction:column;margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.container{flex:1 0 auto;max-width:1120px;margin:0 auto;padding:24px 20px 48px}
+.site-footer{flex:0 0 auto;padding:20px max(20px,calc((100% - 1120px)/2 + 20px));border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+.site-header{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px max(20px,calc((100% - 1120px)/2 + 20px));background:var(--panel);border-bottom:1px solid var(--line)}
+.wordmark{font-size:16px;font-weight:650;color:var(--ink);text-decoration:none}
+.site-nav{display:flex;flex-wrap:wrap;align-items:center;gap:16px;font-size:13px}
+.site-nav a,.muted{color:var(--muted)}
+.site-nav a{text-decoration:none;font-size:12px}
+a{color:var(--ink);text-decoration:underline}
+h1,h2,h3{margin:0 0 12px;font-weight:650;line-height:1.15}h1{font-size:26px}
+.stats-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 24px}
+.stat{padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius-card);background:var(--panel)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin:0 0 24px}
+.skeleton,.skel-line{background:var(--panel2);border-radius:var(--radius-control);animation:skel-pulse 1.4s ease-in-out infinite}
+@keyframes skel-pulse{50%{opacity:.55}}
+.skel-card{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:var(--radius-card);background:var(--panel)}
+.skel-line{height:12px;border-radius:6px}
+@media(max-width:560px){.container{padding:20px 16px 32px}.site-header{padding-inline:16px}.card-grid,.stats-strip{grid-template-columns:1fr}}
+</style>
 <script type="module" src="main.js"></script>
 </head>
 <body>
@@ -17,10 +38,12 @@
     <output id="net" class="net-readout"></output>
   </nav>
 </header>
-<main id="app" class="container"></main>
+<main id="app" class="container">
+  <div class="stats-strip"><div class="stat skeleton"></div><div class="stat skeleton"></div><div class="stat skeleton"></div><div class="stat skeleton"></div></div>
+  <div class="card-grid"><div class="skel-card"><div class="skel-line"></div></div><div class="skel-card"><div class="skel-line"></div></div><div class="skel-card"><div class="skel-line"></div></div></div>
+</main>
 <footer class="site-footer">
   Live data from the make.fun public API. <a href="https://make.fun">make.fun</a>
-  <span class="muted">ETag revalidation, lazy views, in-place updates, no framework.</span>
 </footer>
 </body>
 </html>

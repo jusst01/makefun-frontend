@@ -1,5 +1,7 @@
 [
-  {"file":"1-board.jpg","path":"#/","viewport":{"width":1280,"height":800}},
-  {"file":"2-bounty.jpg","path":"#/bounty/threejs-fps-02","viewport":{"width":1280,"height":800}},
-  {"file":"3-leaderboard.jpg","path":"#/bounty/threejs-fps-02/leaderboard","viewport":{"width":1280,"height":800}}
+  {"file":"1-board.jpg","path":"#/bounty/makefun-frontend-01","viewport":{"width":1280,"height":800}},
+  {"file":"2-bounty.jpg","path":"#/bounty/makefun-frontend-01","viewport":{"width":900,"height":800}},
+  {"file":"3-leaderboard.jpg","path":"#/bounty/makefun-frontend-01/leaderboard","viewport":{"width":1280,"height":800}},
+  {"file":"4-profile.jpg","path":"#/u/superskie","viewport":{"width":1280,"height":800}},
+  {"file":"5-board-phone.jpg","path":"#/","viewport":{"width":390,"height":844}}
 ]
