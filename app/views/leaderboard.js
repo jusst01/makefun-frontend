@@ -251,6 +251,9 @@ export async function renderLeaderboard(container, slug) {
   const phase = (lb && lb.phase) || {};
   const unranked = all.length - ranked.length;
   const entered = entries.length + rest.length;
+  // The header describes the same field the table draws from: every merged row
+  // that carries a win-rate value, not just the full records in `entries`.
+  const rankedCount = all.filter((row) => has(row.value)).length;
 
   container.innerHTML = `
     <h1>${fmt.esc(competition.title || slug)} leaderboard</h1>
@@ -261,7 +264,7 @@ export async function renderLeaderboard(container, slug) {
     </p>
     ${leaderHtml(ranked[0], ctx)}
     <p class="muted">
-      ${entries.length} ranked of ${entered} entered
+      ${rankedCount} ranked of ${entered} entered
       ${unranked > 0 ? ` <span class="muted">·</span> ${unranked} awaiting a rank` : ''}
     </p>
     <div class="toolbar">
