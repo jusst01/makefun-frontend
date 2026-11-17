@@ -958,3 +958,105 @@ tbody tr:last-child td {
     display: none;
   }
 }
+
+/* v3 foundation -------------------------------------------------------- */
+/* Header telemetry: the API traffic for the view currently on screen. */
+.net-readout {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Master and detail side by side only when there is room for both panes. */
+.split {
+  display: block;
+}
+
+.pane-detail {
+  min-width: 0;
+}
+
+/* Board card that owns the detail pane. */
+.bounty-card.is-selected {
+  border-color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* Thin elapsed bar: a track with one filled child driven by width percent. */
+.elapsed {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background-color: var(--line);
+  overflow: hidden;
+}
+
+.elapsed i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--accent);
+  transition: width var(--ease), background-color var(--ease);
+}
+
+.elapsed.hot i {
+  background-color: var(--bad);
+}
+
+/* Payout lines on the profile: label left, amount right, hairline between. */
+.pay-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.pay-row:last-child {
+  border-bottom: none;
+}
+
+.footer-note {
+  display: block;
+  margin-top: 4px;
+}
+
+@media (min-width: 1100px) {
+  .split {
+    display: grid;
+    grid-template-columns: minmax(340px, 430px) 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .pane-detail {
+    position: sticky;
+    top: 76px;
+  }
+}
+
+/* The readout gets its own line on phones and wraps instead of clipping. */
+@media (max-width: 560px) {
+  .site-nav {
+    width: 100%;
+  }
+
+  .net-readout {
+    flex: 1 0 100%;
+    width: 100%;
+    margin-left: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* In the stacked toolbar the 220px flex basis would become a height, so the
+     search field keeps its normal 40px row. */
+  .toolbar .search-input,
+  .toolbar .select {
+    flex: 0 0 auto;
+    height: 40px;
+  }
+}

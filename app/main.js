@@ -1,7 +1,31 @@
-import { getBounties, getBounty, getLeaderboard, getProfile } from './api.js';
+import {
+  getBounties,
+  getBounty,
+  getLeaderboard,
+  getProfile,
+  beginView,
+  subscribe,
+  counters
+} from './api.js';
 import * as fmt from './format.js';
 
 const app = document.getElementById('app');
+const net = document.getElementById('net');
+
+// Header readout: one line describing this view's traffic, repainted whenever a
+// counter moves. No data is shown until this view has actually made a request.
+function paintNet(state) {
+  if (!net) return;
+  const requests = state.requests;
+  const parts = [`this view: ${requests} API ${fmt.plural(requests, 'request', 'requests')}`];
+  parts.push(`${state.reused} from cache`);
+  if (state.unchanged > 0) parts.push(`${state.unchanged} unchanged (ETag)`);
+  if (state.at) parts.push(`as of ${state.at} UTC`);
+  net.textContent = parts.join(' · ');
+}
+
+subscribe(paintNet);
+paintNet(counters);
 
 const loadingHtml = () => `
   <div class="skeleton" style="display:flex;flex-direction:column;gap:12px;padding:20px 0;background:transparent">
@@ -31,6 +55,7 @@ const notFoundHtml = () => `
 
 async function render() {
   window.__shotReady = false;
+  beginView();
   const hash = location.hash || '#/';
 
   app.innerHTML = loadingHtml();
