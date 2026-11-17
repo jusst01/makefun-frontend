@@ -308,7 +308,7 @@ export async function renderLeaderboard(container, slug) {
 
     const start = (page - 1) * PAGE_SIZE;
     const rows = filtered.slice(start, start + PAGE_SIZE);
-    count.textContent = `Showing ${start + 1} to ${start + rows.length} of ${filtered.length} ranked ${fmt.plural(filtered.length, 'entry', 'entries')}`;
+    count.textContent = `Showing ${start + 1} to ${start + rows.length} of ${filtered.length} ${fmt.plural(filtered.length, 'entry', 'entries')}`;
 
     region.innerHTML = `
       ${tableHtml(rows, ctx)}
