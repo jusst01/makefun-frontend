@@ -78,7 +78,7 @@ async function getJson(path) {
 
 export const getBounties = () => getJson('/competitions?status=open&activity=times');
 export const getBounty = (slug) => getJson(`/competitions/${slug}`);
-export const getLeaderboard = (slug) => getJson(`/competitions/${slug}/leaderboard`);
+export const getLeaderboard = (slug) => getJson(`/competitions/${slug}/leaderboard?rows=first`);
 export const getProfile = (handle) => getJson(`/profiles/${handle}`);
 
 const secondSubscribers = new Set();
