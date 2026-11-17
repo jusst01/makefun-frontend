@@ -1005,6 +1005,41 @@ tbody tr:last-child td {
   background-color: var(--bad);
 }
 
+/* The bar sits under the card's meta row and never takes room when absent. */
+.elapsed-slot {
+  display: flex;
+}
+
+.elapsed-slot:empty {
+  display: none;
+}
+
+/* Detail pane on the board: its own heading scale, since the board title and
+   the bounty title can both be on screen at once. */
+.pane-detail h1 {
+  margin-top: 0;
+  font-size: 24px;
+}
+
+.pane-detail > .chip-row {
+  margin-bottom: 16px;
+}
+
+.pane-detail .facts-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* The line that closes a rewards table: base, fees and total at the live pot. */
+tr.total td {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+tbody tr.total:hover {
+  background-color: transparent;
+}
+
 /* Payout lines on the profile: label left, amount right, hairline between. */
 .pay-row {
   display: flex;
