@@ -6,6 +6,8 @@ const toNumber = (value) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const has = (value) => value !== null && value !== undefined && value !== '';
+
 const medalClass = (place) => {
   if (place === 1) return 'gold';
   if (place === 2) return 'silver';
@@ -20,11 +22,35 @@ const placementCell = (place) => {
   return `<span class="muted">#${n}</span>`;
 };
 
+const payoutPlaceCell = (place) => {
+  const n = Number(place);
+  if (n >= 1 && n <= 3) return `<span class="rank-medal ${medalClass(n)}">${n}</span>`;
+  return `<span class="muted">#${n}</span>`;
+};
+
 const scoreText = (score) => {
   const display = score && score.display !== undefined && score.display !== null ? String(score.display) : '';
   if (!display) return '<span class="muted">-</span>';
   if (/^\d{5,}$/.test(display)) return fmt.esc(fmt.rate(Number(display)));
   return fmt.esc(display);
+};
+
+const dot = '<span class="muted">·</span>';
+
+// Avatars arrive as /api/... paths, which are relative to the API host, not to
+// wherever this app is served from.
+const ORIGIN = 'https://make.fun';
+const mediaUrl = (raw) => {
+  if (!has(raw)) return '';
+  const src = String(raw);
+  if (/^https?:\/\//i.test(src)) return src;
+  return `${ORIGIN}${src.startsWith('/') ? '' : '/'}${src}`;
+};
+
+// Money to the cent, so a real payout never reads as a rounded guess.
+const usd = (amount) => {
+  const n = Math.round(toNumber(amount) * 100) / 100;
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 const skeletonHtml = () => `
@@ -42,6 +68,30 @@ const skeletonHtml = () => `
   <div class="skel-line" style="width:20%;height:20px;margin-bottom:14px"></div>
   ${Array.from({ length: 4 }, (_, i) => `<div class="skel-line" style="width:${92 - i * 9}%;margin-bottom:10px"></div>`).join('')}
 `;
+
+// Payout records are keyed by competition; a solution row can then borrow the
+// transaction link and paid date the payload publishes for that competition.
+const payoutIndex = (payouts) => {
+  const bySlug = new Map();
+  if (!Array.isArray(payouts)) return bySlug;
+  for (const payout of payouts) {
+    if (!payout || !payout.competition || !payout.competition.slug) continue;
+    const slug = String(payout.competition.slug);
+    const list = bySlug.get(slug) || [];
+    list.push(payout);
+    bySlug.set(slug, list);
+  }
+  return bySlug;
+};
+
+const matchPayout = (bySlug, solution) => {
+  const slug = solution && solution.competition && solution.competition.slug;
+  if (!slug) return null;
+  const list = bySlug.get(String(slug));
+  if (!list || !list.length) return null;
+  const place = Number(solution.placement);
+  return list.find((payout) => Number(payout.place) === place) || null;
+};
 
 export async function renderProfile(container, handle) {
   container.innerHTML = skeletonHtml();
@@ -63,8 +113,9 @@ export async function renderProfile(container, handle) {
   const initial = String(displayName).trim().substring(0, 1).toUpperCase() || '?';
   const record = p.record && typeof p.record === 'object' ? p.record : {};
   const solutions = Array.isArray(p.solutions) ? p.solutions : [];
+  const payoutsBySlug = payoutIndex(p.payouts);
 
-  const avatarSrc = p.image || p.avatar || '';
+  const avatarSrc = mediaUrl(p.image || p.avatar || '');
   const avatarHtml = avatarSrc
     ? `<div class="avatar" style="position:relative;overflow:hidden">
          <span aria-hidden="true">${fmt.esc(initial)}</span>
@@ -77,9 +128,21 @@ export async function renderProfile(container, handle) {
     ? `<span class="muted">Joined ${fmt.esc(fmt.dateUtc(p.joined_at))}</span>`
     : '<span class="muted">Join date unknown</span>';
 
-  const wallet = p.wallet && p.wallet.address
-    ? `<span class="muted">Wallet: <a href="${fmt.esc(p.wallet.explorer_url || '#')}" target="_blank" rel="noopener">${fmt.esc(fmt.shortWallet(p.wallet.address))}</a></span>`
-    : '';
+  // Identity links: the wallet explorer and the GitHub account are both on the
+  // payload, so both get a link. Neither URL is ever synthesized.
+  const identity = [];
+  if (p.wallet && p.wallet.address) {
+    const address = String(p.wallet.address);
+    const walletLabel = fmt.esc(fmt.shortWallet(address));
+    const explorer = p.wallet.explorer_url ? String(p.wallet.explorer_url) : '';
+    identity.push(explorer
+      ? `<span class="muted">Wallet: <a href="${fmt.esc(explorer)}" target="_blank" rel="noopener">${walletLabel}</a></span>`
+      : `<span class="muted">Wallet: <span class="tabular-nums">${walletLabel}</span></span>`);
+  }
+  if (p.github_login) {
+    const login = String(p.github_login);
+    identity.push(`<span class="muted">GitHub: <a href="https://github.com/${encodeURIComponent(login)}" target="_blank" rel="noopener">${fmt.esc(login)}</a></span>`);
+  }
 
   const bestPlacement = record.best_placement ? `#${fmt.esc(record.best_placement)}` : '-';
 
@@ -107,6 +170,53 @@ export async function renderProfile(container, handle) {
       </div>`
     : '<div class="empty">No entries yet</div>';
 
+  // One line per payout. A payout is money that was actually paid, so a placed
+  // solution still waiting on its prize (prize_usd null, no payout record) is not
+  // listed here: the Payouts section is money, not placements. The prize links to
+  // the transaction explorer only when the payload publishes a URL for it.
+  const paid = solutions.filter((s) => {
+    if (!s || !has(s.placement) || Number(s.placement) <= 0) return false;
+    const payout = matchPayout(payoutsBySlug, s);
+    const amount = has(s.prize_usd) ? toNumber(s.prize_usd) : (payout && has(payout.amount_usd) ? toNumber(payout.amount_usd) : 0);
+    return amount > 0;
+  });
+
+  const payoutsHtml = paid.length
+    ? paid.map((s) => {
+        const place = Number(s.placement);
+        const payout = matchPayout(payoutsBySlug, s);
+        const amount = has(s.prize_usd) ? toNumber(s.prize_usd) : (payout && has(payout.amount_usd) ? toNumber(payout.amount_usd) : 0);
+        const prizeText = usd(amount);
+        const explorer = payout && (payout.explorer_url || payout.transaction_url || payout.tx_url)
+          ? String(payout.explorer_url || payout.transaction_url || payout.tx_url)
+          : '';
+        const prizeCell = explorer
+          ? `<a href="${fmt.esc(explorer)}" target="_blank" rel="noopener">${prizeText}</a>`
+          : prizeText;
+
+        const slug = s.competition && s.competition.slug ? String(s.competition.slug) : '';
+        const name = s.competition && (s.competition.title || s.competition.slug) ? String(s.competition.title || s.competition.slug) : '';
+        const competitionCell = slug
+          ? `<a href="#/bounty/${fmt.esc(slug)}">${fmt.esc(name)}</a>`
+          : dot;
+
+        const dateRaw = payout && has(payout.paid_at) ? payout.paid_at : s.entered_at;
+        const dateText = dateRaw ? fmt.dateFull(dateRaw) : '';
+
+        return `
+          <div class="pay-row">
+            <span style="display:inline-flex;align-items:center;gap:10px;min-width:0">
+              ${payoutPlaceCell(place)}
+              <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${competitionCell}</span>
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:14px;white-space:nowrap">
+              <span class="tabular-nums" style="color:var(--accent);font-weight:600">${prizeCell}</span>
+              <span class="muted">${fmt.esc(dateText)}</span>
+            </span>
+          </div>`;
+      }).join('')
+    : '<p class="muted" style="margin:0">No payouts yet.</p>';
+
   container.innerHTML = `
     <div class="profile-head">
       ${avatarHtml}
@@ -115,7 +225,7 @@ export async function renderProfile(container, handle) {
         <p class="muted">@${fmt.esc(p.handle || handle)}</p>
         <div class="meta-row">
           ${joined}
-          ${wallet}
+          ${identity.join('')}
         </div>
         ${bio}
       </div>
@@ -133,6 +243,9 @@ export async function renderProfile(container, handle) {
 
     <h2>Solutions</h2>
     ${solutionsHtml}
+
+    <h2>Payouts</h2>
+    ${payoutsHtml}
   `;
 
   const img = container.querySelector('.avatar img');
