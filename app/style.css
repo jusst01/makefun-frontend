@@ -1047,3 +1047,15 @@ tbody tr:hover {
     top: 76px;
   }
 }
+
+/* on a narrow phone the telemetry readout cannot share the header row:
+   give it its own full-width line and let the text wrap instead of
+   clipping at the right edge */
+@media (max-width: 560px) {
+  .net-readout {
+    flex-basis: 100%;
+    white-space: normal;
+    text-align: right;
+    font-size: 12px;
+  }
+}
