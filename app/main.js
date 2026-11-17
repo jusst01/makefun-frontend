@@ -1,7 +1,16 @@
-import { getBounties, getBounty, getLeaderboard, getProfile } from './api.js';
+import { getBounties, getBounty, getLeaderboard, getProfile, beginView, subscribe } from './api.js';
 import * as fmt from './format.js';
 
 const app = document.getElementById('app');
+const net = document.getElementById('net');
+
+function paintTelemetry({ requests, reused, unchanged, at }) {
+  if (!net) return;
+  const suffix = unchanged > 0 ? ` · ${unchanged} unchanged (ETag)` : '';
+  const timestamp = at ? ` · as of ${at} UTC` : '';
+  net.textContent = `this view: ${requests} API request${requests === 1 ? '' : 's'} · ${reused} from cache${suffix}${timestamp}`;
+}
+subscribe(paintTelemetry);
 
 const loadingHtml = `
   <div class="skeleton">
@@ -30,6 +39,7 @@ function errorHtml(message) {
 }
 
 async function render() {
+  beginView();
   window.__shotReady = false;
   const hash = location.hash || '#/';
 
