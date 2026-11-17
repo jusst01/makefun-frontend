@@ -3,11 +3,37 @@ import * as fmt from './format.js';
 
 const app = document.getElementById('app');
 
+const loadingHtml = () => `
+  <div class="skeleton" style="display:flex;flex-direction:column;gap:12px;padding:20px 0;background:transparent">
+    <div class="skel-line" style="width:42%;height:30px"></div>
+    <div class="skel-line" style="width:24%"></div>
+    <div class="skel-line" style="width:88%"></div>
+    <div class="skel-line" style="width:76%"></div>
+    <div class="skel-line" style="width:64%"></div>
+  </div>
+`;
+
+const errorHtml = (message) => `
+  <div class="error-box">
+    <h2>Something went wrong</h2>
+    <p>${fmt.esc(message)}</p>
+    <button type="button" class="btn btn-primary" id="retry">Try again</button>
+  </div>
+`;
+
+const notFoundHtml = () => `
+  <div class="empty">
+    <h2>Page not found</h2>
+    <p>That page does not exist.</p>
+    <a class="btn btn-ghost" href="#/">Back to the board</a>
+  </div>
+`;
+
 async function render() {
   window.__shotReady = false;
   const hash = location.hash || '#/';
 
-  app.innerHTML = '<div class="loading">Loading...</div>';
+  app.innerHTML = loadingHtml();
 
   try {
     if (hash === '#/') {
@@ -33,12 +59,15 @@ async function render() {
       await renderProfile(app, handle);
     } else {
       document.title = 'Not found';
-      app.innerHTML = '<h1>404</h1><p>Page not found</p>';
+      app.innerHTML = notFoundHtml();
+      document.documentElement.scrollTop = 0;
     }
 
     document.documentElement.scrollTop = 0;
   } catch (e) {
-    app.innerHTML = `<h1>Error</h1><p>${fmt.esc(e.message)}</p>`;
+    app.innerHTML = errorHtml(e && e.message ? e.message : 'Unknown error');
+    const retry = app.querySelector('#retry');
+    if (retry) retry.addEventListener('click', () => { render(); });
   } finally {
     window.__shotReady = true;
   }
